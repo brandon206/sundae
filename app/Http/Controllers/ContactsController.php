@@ -18,4 +18,11 @@ class ContactsController extends Controller
 
         Contact::create($data);
     }
+
+    // using route model binding, we can pass in that it's going to be a Contact
+    public function show(Contact $contact)
+    {
+        // laravel takes care of converting this to json for us
+        return $contact;
+    }
 }
