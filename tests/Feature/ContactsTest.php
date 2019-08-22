@@ -4,6 +4,7 @@ namespace Tests\Feature;
  
 use App\Contact;
 use Tests\TestCase;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
  
@@ -19,7 +20,8 @@ class ContactsTest extends TestCase
  
         $this->assertEquals('Test Name', $contact->name);
         $this->assertEquals('test@email.com', $contact->email);
-        $this->assertEquals('05/14/1999', $contact->birthday);
+        $formattedBirthday = $contact->birthday->format('m/d/Y');
+        $this->assertEquals('05/14/1999', $formattedBirthday);
         $this->assertEquals('ABC Company', $contact->company);
 
     }
@@ -37,6 +39,29 @@ class ContactsTest extends TestCase
             $response->assertSessionHasErrors($field);
             $this->assertCount(0, Contact::all());
         });
+    }
+
+    /** @test */
+    public function email_must_be_valid_email()
+    {
+        $response = $this->post('/api/contacts',
+            array_merge($this->data(), ['email' => 'NOT AN EMAIL']));
+    
+        $response->assertSessionHasErrors('email');
+        $this->assertCount(0, Contact::all());
+    }
+
+    /** @test */
+    public function birthday_must_be_valid_birthday()
+    {
+        $this->withoutExceptionHandling();
+
+        $response = $this->post('/api/contacts',
+            array_merge($this->data(), ['birthday' => 'May 14, 1999']));
+        
+        $this->assertCount(1, Contact::all());
+        $this->assertInstanceOf(Carbon::class, Contact::first()->birthday);
+        $this->assertEquals('05/14/1999', Contact::first()->birthday->format('m/d/Y'));
     }
 
     private function data()
