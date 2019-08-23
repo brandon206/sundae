@@ -9,14 +9,7 @@ class ContactsController extends Controller
 {
     public function store()
     {
-        $data = request()->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'birthday' => 'required',
-            'company' => 'required',
-        ]);
-
-        Contact::create($data);
+        Contact::create($this->validateData());
     }
 
     // using route model binding, we can pass in that it's going to be a Contact
@@ -24,5 +17,26 @@ class ContactsController extends Controller
     {
         // laravel takes care of converting this to json for us
         return $contact;
+    }
+
+    public function update(Contact $contact)
+    {
+        
+        $contact->update($this->validateData());
+    }
+
+    public function destroy(Contact $contact)
+    {
+        $contact->delete();
+    }
+
+    private function validateData()
+    {
+        return request()->validate([
+            'name' => 'required',
+            'email' => 'required|email',
+            'birthday' => 'required',
+            'company' => 'required',
+        ]);
     }
 }

@@ -77,6 +77,33 @@ class ContactsTest extends TestCase
         ]);
     }
 
+    /** @test */
+    public function a_contact_can_be_patched()
+    {
+        $contact = factory(Contact::class)->create();
+
+        $response = $this->patch('/api/contacts/' . $contact->id, $this->data());
+
+        // need to get a fresh copy, because contact already got saved in the db
+        $contact = $contact->fresh();
+
+        $this->assertEquals('Test Name', $contact->name);
+        $this->assertEquals('test@email.com', $contact->email);
+        $formattedBirthday = $contact->birthday->format('m/d/Y');
+        $this->assertEquals('05/14/1999', $formattedBirthday);
+        $this->assertEquals('ABC Company', $contact->company);
+    }
+
+    /** @test */
+    public function a_contact_can_be_deleted()
+    {
+        $contact = factory(Contact::class)->create();
+
+        $response = $this->delete('/api/contacts/' . $contact->id);
+
+        $this->assertCount(0, Contact::all());
+    }
+
     private function data()
     {   
         return[
