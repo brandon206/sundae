@@ -3,6 +3,7 @@
 namespace Tests\Feature;
  
 use App\Contact;
+use App\User;
 use Tests\TestCase;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -11,8 +12,26 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class ContactsTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = factory(User::class)->create();
+    }
+
     /** @test */
-    public function a_contact_can_be_added ()
+    public function an_unauthenticated_user_should_be_redirected_to_login()
+    {
+        $response = $this->post('/api/contacts', array_merge($this->data(), ['api_token' => '']));
+
+        $response->assertRedirect('/login');
+        $this->assertCount(0, Contact::all());
+    }
+    /** @test */
+    public function an_authenticated_user_can_add_a_contact()
     {
         $this->post('/api/contacts', $this->data());
 
@@ -68,7 +87,7 @@ class ContactsTest extends TestCase
     public function a_contact_can_be_retrieved()
     {
         $contact = factory(Contact::class)->create();
-        $response = $this->get('/api/contacts/' . $contact->id);
+        $response = $this->get('/api/contacts/' . $contact->id . '?api_token=' . $this->user->api_token);
         $response->assertJson([
             'name' => $contact->name,
             'email' => $contact->email,
@@ -99,7 +118,7 @@ class ContactsTest extends TestCase
     {
         $contact = factory(Contact::class)->create();
 
-        $response = $this->delete('/api/contacts/' . $contact->id);
+        $response = $this->delete('/api/contacts/' . $contact->id, ['api_token' => $this->user->api_token]);
 
         $this->assertCount(0, Contact::all());
     }
@@ -111,6 +130,7 @@ class ContactsTest extends TestCase
             'email' => 'test@email.com',
             'birthday' => '05/14/1999',
             'company' => 'ABC Company',
+            'api_token' => $this->user->api_token,
         ];
     }
 }
