@@ -23,6 +23,22 @@ class ContactsTest extends TestCase
     }
 
     /** @test */
+    public function a_list_of_contacts_can_be_fetched_for_the_authenticated_user()
+    {
+        $this->withoutExceptionHandling();
+        $user = factory(User::class)->create();
+        $anotherUser = factory(User::class)->create();
+
+        $contact = factory(Contact::class)->create(['user_id' => $user->id]);
+        $anotherContact = factory(Contact::class)->create(['user_id' => $anotherUser->id]);
+
+        $response = $this->get('/api/contacts?api_token=' . $user->api_token);
+
+        $response->assertJsonCount(1)->assertJson([['id' => $contact->id]]);
+
+    }
+
+    /** @test */
     public function an_unauthenticated_user_should_be_redirected_to_login()
     {
         $response = $this->post('/api/contacts', array_merge($this->data(), ['api_token' => '']));
