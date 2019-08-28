@@ -14,13 +14,18 @@ class ContactsController extends Controller
     
     public function store()
     {
-        Contact::create($this->validateData());
+        // creates a user by using the request user
+        // and use the contact relationship to create the user_id automatically for us
+        request()->user()->contacts()->create($this->validateData());
     }
 
     // using route model binding, we can pass in that it's going to be a Contact
     public function show(Contact $contact)
     {
         // laravel takes care of converting this to json for us
+        if(request()->user()->isNot($contact->user)) {
+            return response([], 403);
+        }
         return $contact;
     }
 

@@ -48,7 +48,7 @@ class ContactsTest extends TestCase
     }
     /** @test */
     public function an_authenticated_user_can_add_a_contact()
-    {
+    {        
         $this->post('/api/contacts', $this->data());
 
         $contact = Contact::first();
@@ -102,20 +102,33 @@ class ContactsTest extends TestCase
     /** @test */
     public function a_contact_can_be_retrieved()
     {
-        $contact = factory(Contact::class)->create();
+        $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
         $response = $this->get('/api/contacts/' . $contact->id . '?api_token=' . $this->user->api_token);
         $response->assertJson([
             'name' => $contact->name,
             'email' => $contact->email,
             'birthday' => $contact->birthday,
             'company' => $contact->company,
-        ]);
+        ]);  
+    }
+
+    /** @test */
+    public function only_the_users_contacts_can_be_retrieved()
+    {
+        $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
+
+        $anotherUser = factory(User::class)->create();
+
+        $response = $this->get('/api/contacts/' . $contact->id . '?api_token=' . $anotherUser->api_token);
+
+        $response->assertStatus(403);
     }
 
     /** @test */
     public function a_contact_can_be_patched()
     {
-        $contact = factory(Contact::class)->create();
+        $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
+
 
         $response = $this->patch('/api/contacts/' . $contact->id, $this->data());
 
@@ -132,7 +145,7 @@ class ContactsTest extends TestCase
     /** @test */
     public function a_contact_can_be_deleted()
     {
-        $contact = factory(Contact::class)->create();
+        $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
 
         $response = $this->delete('/api/contacts/' . $contact->id, ['api_token' => $this->user->api_token]);
 
