@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\User;
 
 class Contact extends Model
 {

@@ -129,7 +129,6 @@ class ContactsTest extends TestCase
     {
         $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
 
-
         $response = $this->patch('/api/contacts/' . $contact->id, $this->data());
 
         // need to get a fresh copy, because contact already got saved in the db
@@ -143,6 +142,20 @@ class ContactsTest extends TestCase
     }
 
     /** @test */
+    public function only_the_owner_of_the_contact_can_patch_the_contact()
+    {
+        $contact = factory(Contact::class)->create();
+
+        $anotherUser = factory(User::class)->create();
+
+        $response = $this->patch('/api/contacts/' . $contact->id,
+        //overriding api token
+            array_merge($this->data(), ['api_token' => $anotherUser->api_token]));
+        
+        $response->assertStatus(403);
+    }
+
+    /** @test */
     public function a_contact_can_be_deleted()
     {
         $contact = factory(Contact::class)->create(['user_id' => $this->user->id]);
@@ -150,6 +163,20 @@ class ContactsTest extends TestCase
         $response = $this->delete('/api/contacts/' . $contact->id, ['api_token' => $this->user->api_token]);
 
         $this->assertCount(0, Contact::all());
+    }
+
+    /** @test */
+    public function only_the_owner_of_the_contact_can_delete_the_contact()
+    {
+        $contact = factory(Contact::class)->create();
+
+        $anotherUser = factory(User::class)->create();
+
+        $response = $this->patch('/api/contacts/' . $contact->id,
+        //overriding api token
+            array_merge($this->data(), ['api_token' => $anotherUser->api_token]));
+        
+        $response->assertStatus(403);
     }
 
     private function data()
