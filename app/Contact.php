@@ -12,6 +12,12 @@ class Contact extends Model
 
     protected $dates = ['birthday'];
 
+    // path is used to know how to access it's own resource
+    public function path()
+    {
+        return url('/contacts/' . $this->id);
+    }
+
     public function setBirthdayAttribute($birthday)
     {
         $this->attributes['birthday'] = Carbon::parse($birthday);
