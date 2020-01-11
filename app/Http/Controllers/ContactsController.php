@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Contact;
 use App\Http\Resources\Contact as ContactResource;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ContactsController extends Controller
 {
@@ -22,7 +23,13 @@ class ContactsController extends Controller
 
         // creates a user by using the request user
         // and use the contact relationship to create the user_id automatically for us
-        request()->user()->contacts()->create($this->validateData());
+        // laravel returns the response when calling that `create` method
+        $contact = request()->user()->contacts()->create($this->validateData());
+
+        return (new ContactResource($contact))
+            // returns the actual response object    
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
     // using route model binding, we can pass in that it's going to be a Contact

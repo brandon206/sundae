@@ -6,6 +6,7 @@ use App\Contact;
 use App\User;
 use Tests\TestCase;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
  
@@ -53,15 +54,25 @@ class ContactsTest extends TestCase
     /** @test */
     public function an_authenticated_user_can_add_a_contact()
     {        
-        $this->post('/api/contacts', $this->data());
+        $response = $this->post('/api/contacts', $this->data());
 
         $contact = Contact::first();
- 
+         
         $this->assertEquals('Test Name', $contact->name);
         $this->assertEquals('test@email.com', $contact->email);
         $formattedBirthday = $contact->birthday->format('m/d/Y');
         $this->assertEquals('05/14/1999', $formattedBirthday);
         $this->assertEquals('ABC Company', $contact->company);
+        // using Symphony's method you can know what a 201 http response is
+        $response->assertStatus(Response::HTTP_CREATED);
+        $response->assertJson([
+            'data' => [
+                'contact_id' => $contact->id
+            ],
+            'links' => [
+                'self' => url('/contacts/' . $contact->id)
+            ]
+        ]);
 
     }
 
